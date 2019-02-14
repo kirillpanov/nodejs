@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const fs = require("fs");
 const Promise = require("bluebird");
 const toPairs = require("lodash/toPairs");
@@ -31,7 +32,7 @@ app.use(bodyParser.json());
  *
  * response: { news: [ { id: text } , {id: text} ] }
  */
-app.get("/news", (req, res) => {
+app.get("/news", cors(), (req, res) => {
     readFileAsync("./news.json", "utf-8")
         .then(content => JSON.parse(content))
         .tap(() => console.log(`Got request for getting news`))
@@ -46,7 +47,7 @@ app.get("/news", (req, res) => {
  *
  * response: { newsItem: { id: text } }
  */
-app.get("/news/:id", (req, res) => {
+app.get("/news/:id", cors(), (req, res) => {
     let id;
     readFileAsync("./news.json", "utf-8")
         .then(content => JSON.parse(content))
@@ -61,7 +62,7 @@ app.get("/news/:id", (req, res) => {
  *
  * example of object to send: { "id1": "Other news item1", "id2": "Other news item2" }
  */
-app.post("/news", (req, res) => {
+app.post("/news", cors(), (req, res) => {
     writeFileAsync("./news.json", JSON.stringify(req.body))
         .tap(() => console.log(req.body))
         .then(() => res.send("news were added"))
@@ -73,7 +74,7 @@ app.post("/news", (req, res) => {
  *
  * example of object to send: { "newItem": "Other news item3" }
  */
-app.put("/news/:id", (req, res) => {
+app.put("/news/:id", cors(), (req, res) => {
     readFileAsync("./news.json", "utf-8")
         .then(content => JSON.parse(content))
         .tap(() => console.log(req.body))
@@ -89,7 +90,7 @@ app.put("/news/:id", (req, res) => {
  * delete items
  *
  */
-app.delete("/news/:id", (req, res) => {
+app.delete("/news/:id", cors(), (req, res) => {
     readFileAsync("./news.json", "utf-8")
         .then(content => JSON.parse(content))
         .then(data => {
