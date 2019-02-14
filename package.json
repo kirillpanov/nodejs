@@ -1,0 +1,26 @@
+{
+    "name": "nodejs",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon index.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kirillpanov/nodejs.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/kirillpanov/nodejs/issues"
+    },
+    "homepage": "https://github.com/kirillpanov/nodejs#readme",
+    "dependencies": {
+        "bluebird": "^3.5.3",
+        "express": "^4.16.4",
+        "lodash": "^4.17.11",
+        "nodemon": "^1.18.9"
+    }
+}
