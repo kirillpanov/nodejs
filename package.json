@@ -19,6 +19,7 @@
     "homepage": "https://github.com/kirillpanov/nodejs#readme",
     "dependencies": {
         "bluebird": "^3.5.3",
+        "cors": "^2.8.5",
         "express": "^4.16.4",
         "lodash": "^4.17.11",
         "nodemon": "^1.18.9"
