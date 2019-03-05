@@ -1,103 +1,72 @@
 const express = require("express");
-const fs = require("fs");
-const Promise = require("bluebird");
-const toPairs = require("lodash/toPairs");
-const fromPairs = require("lodash/fromPairs");
-const map = require("lodash/map");
-const assign = require("lodash/assign");
-const unset = require("lodash/unset");
+const first = require("lodash/first");
 const bodyParser = require("body-parser");
-
-const readFileAsync = Promise.promisify(fs.readFile);
-const writeFileAsync = Promise.promisify(fs.writeFile);
 const app = express();
+
+const newsMongoose = require("./mongoose/news.mongoose");
+
+newsMongoose.connectDataBase();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
-/*
- * task 2
- *
- * entities (any route, any request)
- */
-// app.use("*", (req, res) => {
-//     readFileAsync("./news.json", "utf-8")
-//         .then(content => res.send(content))
-//         .catch(console.error);
-// });
 
 /*
  * return array of news
  *
  * response: { news: [ { id: text } , {id: text} ] }
  */
-app.get("/news", (req, res) => {
-    readFileAsync("./news.json", "utf-8")
-        .then(content => JSON.parse(content))
-        .tap(() => console.log(`Got request for getting news`))
-        .then(data =>
-            res.send({ news: map(toPairs(data), item => fromPairs([item])) })
-        )
-        .catch(console.error);
+app.get("/news", (_, res) => {
+    newsMongoose.getNews().then(newsItems => res.send({ news: newsItems }));
 });
 
 /*
  * return news item by its id
  *
- * response: { newsItem: { id: text } }
+ * response: { newsItem: { id: text, ... } }
  */
 app.get("/news/:id", (req, res) => {
-    let id;
-    readFileAsync("./news.json", "utf-8")
-        .then(content => JSON.parse(content))
-        .tap(() => (id = req.params.id))
-        .tap(() => console.log(`Got request with id:${id}`))
-        .then(data => res.send({ newsItem: { [id]: data[id] } }))
-        .catch(console.error);
+    newsMongoose
+        .getNews(req.params.id)
+        .then(items => res.send({ newsItem: first(items) }));
 });
 
 /*
- * override news
+ * post array of news
  *
- * example of object to send: { "id1": "Other news item1", "id2": "Other news item2" }
+ * example of object to send: { "items": [ { "title": "Some title 3", "content": "Some content 3" }, { "title": "Some title 4", "content": "Some content 4" } ]}
  */
 app.post("/news", (req, res) => {
-    writeFileAsync("./news.json", JSON.stringify(req.body))
-        .tap(() => console.log(req.body))
-        .then(() => res.send("news were added"))
-        .catch(console.error);
+    newsMongoose
+        .postNews(req.body && req.body.items)
+        .then(() => res.send("news were posted successfully"));
 });
 
 /*
  * add items
  *
- * example of object to send: { "newItem": "Other news item3" }
+ * example of object to send: { "newsItem": { "title": "Some title 1", "content": "Some content 1" } }
  */
-app.put("/news/:id", (req, res) => {
-    readFileAsync("./news.json", "utf-8")
-        .then(content => JSON.parse(content))
-        .tap(() => console.log(req.body))
-        .then(data =>
-            assign({}, data, { [req.params.id]: req.body && req.body.newItem })
-        )
-        .then(data => writeFileAsync("./news.json", JSON.stringify(data)))
-        .then(() => res.send("news item was added"))
+app.put("/news", (req, res) => {
+    newsMongoose.addItem(req.body && req.body.newsItem);
+});
+
+/*
+ * delete item by id
+ */
+app.delete("/news/:id", (req, res) => {
+    newsMongoose
+        .deleteById(req.params.id)
+        .then(() => res.send(`items with id ${req.params.id} was deleted`))
         .catch(console.error);
 });
 
 /*
- * delete items
- *
+ * delete item by id
  */
-app.delete("/news/:id", (req, res) => {
-    readFileAsync("./news.json", "utf-8")
-        .then(content => JSON.parse(content))
-        .then(data => {
-            unset(data, req.params.id);
-            return data;
-        })
-        .then(data => writeFileAsync("./news.json", JSON.stringify(data)))
-        .then(() => res.send(`news item with id:${req.params.id} was deleted`))
+app.delete("/news", (_, res) => {
+    newsMongoose
+        .deleteAll(res)
+        .then(() => res.send("all news were deleted"))
         .catch(console.error);
 });
 
